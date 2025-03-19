@@ -31,35 +31,42 @@ export default function NetlifyConnection() {
   const handleConnect = async (event: React.FormEvent) => {
     event.preventDefault();
     isConnecting.set(true);
-
     try {
-      const response = await fetch('https://api.netlify.com/api/v1/user', {
-        headers: {
-          Authorization: `Bearer ${connection.token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Invalid token or unauthorized');
-      }
-
-      const userData = (await response.json()) as NetlifyUser;
-      updateNetlifyConnection({
-        user: userData,
-        token: connection.token,
-      });
-
-      await fetchNetlifyStats(connection.token);
-      toast.success('Successfully connected to Netlify');
+      await connectToNetlify();
     } catch (error) {
-      console.error('Auth error:', error);
-      logStore.logError('Failed to authenticate with Netlify', { error });
-      toast.error('Failed to connect to Netlify');
-      updateNetlifyConnection({ user: null, token: '' });
+      handleConnectionError(error);
     } finally {
       isConnecting.set(false);
     }
+  };
+
+  const connectToNetlify = async () => {
+    const response = await fetch('https://api.netlify.com/api/v1/user', {
+      headers: {
+        Authorization: `Bearer ${connection.token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Invalid token or unauthorized');
+    }
+
+    const userData = (await response.json()) as NetlifyUser;
+    updateNetlifyConnection({
+      user: userData,
+      token: connection.token,
+    });
+
+    await fetchNetlifyStats(connection.token);
+    toast.success('Successfully connected to Netlify');
+  };
+
+  const handleConnectionError = (error: any) => {
+    console.error('Auth error:', error);
+    logStore.logError('Failed to authenticate with Netlify', { error });
+    toast.error('Failed to connect to Netlify');
+    updateNetlifyConnection({ user: null, token: '' });
   };
 
   const handleDisconnect = () => {

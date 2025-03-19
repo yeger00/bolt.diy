@@ -1,0 +1,13 @@
+Hello,
+
+There are code quality and security issues raised from "Sonarqube" that needs to be fixed.
+I will give you the issue as received from Sonarqube API, and you will fix the issue in the repository.
+
+Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.
+Cognitive Complexity of functions should not be too high typescript:S3776
+Software qualities impacted: Maintainability
+
+file: app/components/@settings/tabs/connections/NetlifyConnection.tsx
+line: 16
+function name: NetlifyConnection()
+original link: https://sonarcloud.io/project/issues?open=AZWtUWWzSsLV3gk2M_jW&id=yeger00_bolt.diy
