@@ -242,14 +242,38 @@ export default function DebugTab() {
 
   // Subscribe to logStore updates
   const logs = useStore(logStore.logs);
-  const errorLogs = useMemo(() => {
+  const errorLogs = useMemo(() => filterErrorLogs(logs), [logs]);
+
+  useEffect(() => {
+    setupErrorListeners();
+  }, []);
+
+  useEffect(() => {
+    if (openSections.errors) {
+      checkErrors();
+    }
+  }, [openSections.errors]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  useEffect(() => {
+    refreshDataOnSectionOpen(openSections);
+  }, [openSections.system, openSections.webapp]);
+
+  useEffect(() => {
+    const interval = setupGitInfoRefresh(openSections.webapp);
+    return () => clearInterval(interval);
+  }, [openSections.webapp]);
+
+  const filterErrorLogs = (logs: Record<string, LogEntry>) => {
     return Object.values(logs).filter(
       (log): log is LogEntry => typeof log === 'object' && log !== null && 'level' in log && log.level === 'error',
     );
-  }, [logs]);
+  };
 
-  // Set up error listeners when component mounts
-  useEffect(() => {
+  const setupErrorListeners = () => {
     const handleError = (event: ErrorEvent) => {
       logStore.logError(event.message, event.error, {
         filename: event.filename,
@@ -269,26 +293,13 @@ export default function DebugTab() {
       window.removeEventListener('error', handleError);
       window.removeEventListener('unhandledrejection', handleRejection);
     };
-  }, []);
+  };
 
-  // Check for errors when the errors section is opened
-  useEffect(() => {
-    if (openSections.errors) {
-      checkErrors();
-    }
-  }, [openSections.errors]);
+  const loadInitialData = async () => {
+    await Promise.all([getSystemInfo(), getWebAppInfo()]);
+  };
 
-  // Load initial data when component mounts
-  useEffect(() => {
-    const loadInitialData = async () => {
-      await Promise.all([getSystemInfo(), getWebAppInfo()]);
-    };
-
-    loadInitialData();
-  }, []);
-
-  // Refresh data when sections are opened
-  useEffect(() => {
+  const refreshDataOnSectionOpen = (openSections: { system: boolean; webapp: boolean }) => {
     if (openSections.system) {
       getSystemInfo();
     }
@@ -296,15 +307,13 @@ export default function DebugTab() {
     if (openSections.webapp) {
       getWebAppInfo();
     }
-  }, [openSections.system, openSections.webapp]);
+  };
 
-  // Add periodic refresh of git info
-  useEffect(() => {
-    if (!openSections.webapp) {
+  const setupGitInfoRefresh = (isWebAppOpen: boolean) => {
+    if (!isWebAppOpen) {
       return undefined;
     }
 
-    // Initial fetch
     const fetchGitInfo = async () => {
       try {
         const response = await fetch('/api/system/git-info');
@@ -315,7 +324,6 @@ export default function DebugTab() {
             return null;
           }
 
-          // Only update if the data has changed
           if (JSON.stringify(prev.gitInfo) === JSON.stringify(updatedGitInfo)) {
             return prev;
           }
@@ -332,13 +340,9 @@ export default function DebugTab() {
 
     fetchGitInfo();
 
-    // Refresh every 5 minutes instead of every second
     const interval = setInterval(fetchGitInfo, 5 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [openSections.webapp]);
-
-  const getSystemInfo = async () => {
+    return interval;
+  };
     try {
       setLoading((prev) => ({ ...prev, systemInfo: true }));
 
