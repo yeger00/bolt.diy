@@ -263,18 +263,10 @@ export const ControlPanel = ({ open, onClose }: ControlPanelProps) => {
     },
   };
 
-  // Reset to default view when modal opens/closes
-  useEffect(() => {
-    if (!open) {
-      // Reset when closing
-      setActiveTab(null);
-      setLoadingTab(null);
-      setShowTabManagement(false);
-    } else {
-      // When opening, set to null to show the main view
-      setActiveTab(null);
-    }
-  }, [open]);
+  // Handle opening
+  const handleOpen = () => {
+    setActiveTab(null);
+  };
 
   // Handle closing
   const handleClose = () => {
@@ -283,6 +275,15 @@ export const ControlPanel = ({ open, onClose }: ControlPanelProps) => {
     setShowTabManagement(false);
     onClose();
   };
+
+  // Reset to default view when modal opens/closes
+  useEffect(() => {
+    if (open) {
+      handleOpen();
+    } else {
+      handleClose();
+    }
+  }, [open]);
 
   // Handlers
   const handleBack = () => {

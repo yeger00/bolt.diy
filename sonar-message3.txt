@@ -1,0 +1,13 @@
+Hello,
+
+There are code quality and security issues raised from "Sonarqube" that needs to be fixed.
+I will give you the issue as received from Sonarqube API, and you will fix the issue in the repository.
+
+Provide multiple methods instead of using "open" to determine which action to take.
+Methods should not contain selector parameters typescript:S2301
+Software qualities impacted:
+Maintainability
+
+file: app/components/@settings/core/ControlPanel.tsx
+line: 268
+original link: https://sonarcloud.io/project/issues?open=AZWtUWV7SsLV3gk2M_i1&id=yeger00_bolt.diy
